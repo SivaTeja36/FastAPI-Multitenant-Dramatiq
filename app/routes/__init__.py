@@ -1,7 +1,14 @@
-from fastapi import Depends, FastAPI
+from fastapi import (
+    Depends, 
+    FastAPI
+)
 from fastapi.security import HTTPBearer
-from app.routes.route_entries import PROTECTED_ROUTES, PUBLIC_ROUTES
+from app.routes.route_entries import (
+    PROTECTED_ROUTES, 
+    PUBLIC_ROUTES
+)
 from app.utils.auth_dependencies import verify_auth_token
+
 security = HTTPBearer()
 
 

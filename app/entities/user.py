@@ -7,14 +7,14 @@ from datetime import datetime
 class User(Base):
     __tablename__ = "users"
 
-    id:int = sa.Column(sa.Integer, primary_key=True, nullable=False)
-    name:str = sa.Column(sa.String(256), nullable=False)
-    username:str = sa.Column(sa.String(256), nullable=False, index=True, unique=True)
-    __password:str = sa.Column(name="password", type_=sa.String(500), nullable=False, index=True)
-    contact:str = sa.Column(sa.String(500), nullable=False, unique=True)
-    __role:int = sa.Column(name="role",type_=sa.Integer, nullable=False)
-    created_at:datetime = sa.Column(sa.DateTime, nullable=False, default=sa.func.now())
-    is_active:bool = sa.Column(sa.Boolean, nullable=False, default=True)
+    id: int = sa.Column(sa.Integer, primary_key=True, nullable=False)
+    name: str = sa.Column(sa.String(256), nullable=False)
+    username: str = sa.Column(sa.String(256), nullable=False, index=True, unique=True)
+    __password: str = sa.Column(name="password", type_=sa.String(500), nullable=False, index=True)
+    contact: str = sa.Column(sa.String(500), nullable=False, unique=True)
+    __role: int = sa.Column(name="role", type_=sa.Integer, nullable=False)
+    created_at: datetime = sa.Column(sa.DateTime, nullable=False, default=sa.func.now())
+    is_active: bool = sa.Column(sa.Boolean, nullable=False, default=True)
     
     @property
     def password(self):

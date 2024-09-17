@@ -1,12 +1,22 @@
-from fastapi import APIRouter, Depends
-from fastapi import status
-from app.models.organization_models import OrganizationRequest, OrganizationResponse
-from app.models.user_models import UserCreationRequest, UserCreationResponse
-from app.services.company_creation_service import CompanyCreationService
+from fastapi import (
+    APIRouter, 
+    Depends,
+    status
+)
 from automapper import mapper
+from app.models.organization_models import (
+    OrganizationRequest, 
+    OrganizationResponse
+)
+from app.models.user_models import (
+    UserCreationRequest, 
+    UserCreationResponse
+)
+from app.services.company_creation_service import CompanyCreationService
 from app.services.user_service import UserService
 
-router = APIRouter(prefix="/admin", tags=["organization management"])
+router = APIRouter(prefix="/admin", tags=["ORGANIZATION MANAGEMENT"])
+
 
 @router.post(
     "/org/create",
@@ -21,7 +31,9 @@ async def create_organization(
 
 
 @router.get(
-    "/org/{id}", response_model=OrganizationResponse, status_code=status.HTTP_200_OK
+    "/org/{id}", 
+    response_model=OrganizationResponse, 
+    status_code=status.HTTP_200_OK
 )
 async def get_organization(
     id: int, service:CompanyCreationService = Depends(CompanyCreationService)
@@ -31,10 +43,13 @@ async def get_organization(
 
 
 @router.post(
-    "/user", response_model=UserCreationResponse, status_code=status.HTTP_201_CREATED
+    "/user", 
+    response_model=UserCreationResponse, 
+    status_code=status.HTTP_201_CREATED
 )
 async def create_user(
-    request: UserCreationRequest, service:UserService = Depends(UserService)
+    request: UserCreationRequest, 
+    service:UserService = Depends(UserService)
 ) -> UserCreationResponse:
     user = service.create_user(
         request.name,

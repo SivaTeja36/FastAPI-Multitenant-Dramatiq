@@ -1,5 +1,8 @@
 
-from pydantic import BaseModel, EmailStr
+from pydantic import (
+    BaseModel, 
+    EmailStr
+)
 
 
 class LoginRequest(BaseModel):
@@ -7,8 +10,8 @@ class LoginRequest(BaseModel):
     password: str
 
 class LoginResponse(BaseModel):
+    id: int
+    name: str
+    role: str
+    contact: str
     access_token: str
-    name:str
-    role:str
-    id:int
-    contact:str

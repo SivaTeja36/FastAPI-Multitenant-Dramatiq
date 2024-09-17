@@ -1,8 +1,11 @@
-from fastapi import APIRouter
-from fastapi import status
-
+from fastapi import (
+    APIRouter, 
+    status
+)
 from app.background_tasks.example_task import example_task
+
 router = APIRouter(tags=["background-process"])
+
 
 @router.post(
     "/example",

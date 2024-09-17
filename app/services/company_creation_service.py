@@ -1,29 +1,38 @@
 from dataclasses import dataclass
 import traceback
 import uuid
+import argparse
 from fastapi import Depends
 from sqlalchemy.orm import Session
 import sqlalchemy as sa
-from alembic import command, script
+from alembic import (
+    command, 
+    script
+)
 from alembic.config import Config
 from alembic.migration import MigrationContext
-from app.connectors.database_connector import get_master_database
+from app.connectors.database_connector import (
+    get_master_database, 
+    get_master_db
+)
 from app.entities.company import Company
 from app.utils.constants import DB_NOT_UPTODATE
-from app.utils.project_dependencies import master_database
-from app.utils.utils import get_project_root, get_randome_str
-import argparse
+from app.utils.utils import (
+    get_project_root, 
+    get_randome_str
+)
+
 
 @dataclass
 class CompanyCreationService:
-
-    db: Session = Depends(master_database)
+    db: Session = Depends(get_master_db)
 
     @staticmethod
     def __get_current_head(db: Session):
         connection = db.connection()
         context = MigrationContext.configure(connection)
         current_head = context.get_current_revision()
+
         if current_head == None:
             raise Exception(DB_NOT_UPTODATE)
         return current_head
@@ -33,6 +42,7 @@ class CompanyCreationService:
         alembic_config = Config(get_project_root().joinpath("alembic.ini"))
         alembic_script = script.ScriptDirectory.from_config(alembic_config)
         config_head = alembic_script.get_current_head()
+
         if current_head != config_head:
             raise RuntimeError(
                 "Database is not up-to-date. Execute migrations before adding new tenants."
@@ -40,6 +50,7 @@ class CompanyCreationService:
         # If it is required to pass -x parameters to alembic
         x_arg = "".join(["tenant=", schema])  # "dry_run=" + "True"
         alembic_config.cmd_opts = argparse.Namespace()  # arguments stub
+        
         if not hasattr(alembic_config.cmd_opts, "x"):
             if x_arg is not None:
                 setattr(alembic_config.cmd_opts, "x", [x_arg])

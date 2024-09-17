@@ -1,19 +1,27 @@
-from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi import status
-from app.models.auth_models import LoginRequest, LoginResponse
+from datetime import (
+    datetime, 
+    timedelta
+)
 from jose import jwt
+from fastapi import (
+    APIRouter, 
+    Depends, 
+    HTTPException, 
+    status
+)
+from app.models.auth_models import (
+    LoginRequest, 
+    LoginResponse
+)
 from app.services.user_service import UserService
-
 from app.utils.auth_dependencies import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
     ALGORITHM,
     SECRET_KEY,
 )
 from app.utils.constants import USER_NOT_FOUND
-from app.utils.project_dependencies import company_database
 
-router = APIRouter(tags=["Authentication"])
+router = APIRouter(tags=["AUTHENTICATION"])
 
 
 @router.post(
@@ -23,9 +31,10 @@ router = APIRouter(tags=["Authentication"])
 )
 async def login(
     request: LoginRequest,
-    service:UserService = Depends(UserService)
+    service: UserService = Depends(UserService)
 ) -> LoginResponse:
     user = service.validate_user(request.userName, request.password)
+
     if user and user.verify_password(request.password):
         claims = {
             "sub": str(user.username),
@@ -47,4 +56,7 @@ async def login(
         except Exception as e:
             print(e)
             raise e
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=USER_NOT_FOUND)
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND, 
+        detail=USER_NOT_FOUND
+    )

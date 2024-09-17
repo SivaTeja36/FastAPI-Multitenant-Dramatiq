@@ -1,9 +1,8 @@
 import os
 from dotenv import load_dotenv
 from fastapi import Request
-from app.models.user_models import CurrentContextUser
 from jose import jwt
-
+from app.models.user_models import CurrentContextUser
 from app.utils.constants import AUTHORIZATION
 
 load_dotenv()
@@ -17,6 +16,7 @@ def __verify_jwt(token: str):
     token = token.replace("Bearer ", "")
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_sub": True})  # type: ignore
     user = payload.get("sub")
+    
     if user:
         cur_user = CurrentContextUser()
         cur_user.username = str(user)
