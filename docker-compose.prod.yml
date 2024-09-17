@@ -1,0 +1,92 @@
+version: "3.7"
+networks:
+  app_network:
+services:
+  db:
+    hostname: postgres
+    image: postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/
+    volumes:
+      - ${POSTGRES_DATA_PATH}:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - app_network
+
+  rabbitmq:
+    hostname: rabbitmq
+    image: rabbitmq:management
+    volumes:
+      - ${RABBITMQ_DATA_PATH}:/data
+    ports:
+      - "15672:15672"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - app_network
+
+  api:
+    build:
+      context: .
+      dockerfile: dockerfile.prod
+    depends_on:
+      - db
+    ports:
+      - 8080:80
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "5"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: postgres
+      RABBITMQ_HOST: rabbitmq
+      JWT_SECRET: ${JWT_SECRET}
+      IS_DOCKER: "True"
+      PORT: 80
+      LOG_LEVEL: "info"
+      ACCESS_LOG: "./logfile.log"
+      ERROR_LOG: "./error.log"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - app_network
+  
+  dramatiq:
+    build:
+      context: .
+      dockerfile: dockerfile.dramatiq
+    depends_on:
+      - db
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "5"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: postgres
+      RABBITMQ_HOST: rabbitmq
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - app_network
