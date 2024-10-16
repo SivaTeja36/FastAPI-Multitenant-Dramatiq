@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import traceback
 import uuid
 import argparse
+from automapper import mapper
 from fastapi import Depends
 from sqlalchemy.orm import Session
 import sqlalchemy as sa
@@ -16,6 +17,7 @@ from app.connectors.database_connector import (
     get_master_db
 )
 from app.entities.company import Company
+from app.models.organization_models import OrganizationResponse
 from app.utils.constants import DB_NOT_UPTODATE
 from app.utils.utils import (
     get_project_root, 
@@ -85,7 +87,8 @@ class CompanyCreationService:
         self.db.commit()
         current_head = CompanyCreationService.__get_current_head(self.db)
         CompanyCreationService.__upgrade(schema, current_head)
-        return tenant
+        return mapper.to(OrganizationResponse).map(tenant)
 
     def get_company(self, id: int) -> Company:
-        return self.db.query(Company).filter(Company.id == id).first()  # type: ignore
+        company = self.db.query(Company).filter(Company.id == id).first()  # type: ignore
+        return mapper.to(OrganizationResponse).map(company)
