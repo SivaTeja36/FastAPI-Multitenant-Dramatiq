@@ -1,19 +1,13 @@
 import os
 from datetime import datetime
-from dotenv import load_dotenv
 import traceback
 from fastapi import Request
 import sqlalchemy as sa
-from sqlalchemy import text
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import (
-    sessionmaker, 
-    Session
-)
-from app.utils.constants import (
-    AUTHORIZATION, 
-    MASTER_SCHEMA
-)
+from sqlalchemy.orm import sessionmaker, Session
+from dotenv import load_dotenv
+import os
+from app.utils.constants import AUTHORIZATION, MASTER_SCHEMA
 
 load_dotenv()  # Load environment variables from .env file
 
@@ -40,7 +34,7 @@ Base = declarative_base(metadata=sa.MetaData())
 
 class TenantNotFoundError(Exception):
     def __init__(self, id):
-        self.message = "TENANT %s NOT FOUND!" % str(id)
+        self.message = "Tenant %s not found!" % str(id)
         super().__init__(self.message)
 
 
@@ -52,8 +46,7 @@ def build_db_session(schema: str) -> Session:
     if schema:
         schema_translate_map = dict(tenant=schema)
     else:
-        raise TenantNotFoundError("TENANT %s NOT FOUND!" % schema)
-    
+        raise TenantNotFoundError("Tenant %s not found!" % schema)
     connectable = engine.execution_options(schema_translate_map=schema_translate_map)
     connectable.dialect.default_schema_name = schema
     db = sessionmaker(bind=connectable, expire_on_commit=False)()
@@ -66,20 +59,17 @@ def get_connected_schema(db: Session) -> str:
 
 
 def get_tenant_db(request: Request):
-    company_name = request.state.user.company_domain_name
-
-    with get_master_database() as master_db:
-        result = master_db.execute(
-            text(f"SELECT schema FROM companies WHERE name='{company_name}';")
-            ).fetchone()
-   
-    if result is None:
-        raise TenantNotFoundError(company_name)
-    
-    tenant_schema = result[0]
-    print("TRANSACTION STARTING, OPENING TENANT DB: ", datetime.now())
-    db = build_db_session(tenant_schema)
-
+    toekn = request.headers.get(AUTHORIZATION) or ""
+    access_key = toekn.replace("Bearer ", "").split(".").pop()
+    master_db = get_master_database()
+    result = master_db.execute(
+        sa.text("SELECT schema FROM companies WHERE access_key='" + access_key + "';")
+    ).fetchall()
+    master_db.close()
+    if not result or not result[0] or not result[0][0]:
+        raise TenantNotFoundError(access_key)
+    print("transaction starting, opening db. ", datetime.now())
+    db = build_db_session(result[0][0])
     try:
         yield db
     finally:
@@ -90,13 +80,12 @@ def get_tenant_db(request: Request):
             db.rollback()
         finally:
             db.close()
-        print("TRANSACTION COMPLETED, CLOSING TENANT DB: ", datetime.now())
+        print("transaction completed, closing db. ", datetime.now())
 
 
 def get_master_db():
-    print("TRANSACTION STARTING, OPENING MASTER DB: ", datetime.now())
+    print("transaction starting, opening master db. ", datetime.now())
     db = get_master_database()
-
     try:
         yield db
     finally:
@@ -107,4 +96,4 @@ def get_master_db():
             db.rollback()
         finally:
             db.close()
-        print("TRANSACTION COMPLETED, CLOSING MASTER DB: ", datetime.now())
+        print("transaction completed, closing master db. ", datetime.now())
